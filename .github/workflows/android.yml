@@ -1,4 +1,4 @@
-name: Build Android APK (No Docker)
+name: Build Android APK (No Docker, Ubuntu 24.04)
 
 on:  
   push:  
@@ -10,18 +10,20 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       # 1️⃣ 拉取仓库代码
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ 安装依赖（Python + Buildozer + Android SDK/NDK）
+      # 2️⃣ 设置 Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'  # Buildozer 推荐 Python 3.8~3.11
+          python-version: '3.11'
 
-      - name: Install Buildozer & dependencies
+      # 3️⃣ 安装 Buildozer 所需系统依赖
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -31,8 +33,7 @@ jobs:
             unzip \
             openjdk-17-jdk \
             zlib1g-dev \
-            libncurses5 \
-            libncurses5-dev \
+            libncurses-dev \
             libffi-dev \
             libssl-dev \
             autoconf \
@@ -48,18 +49,18 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython
 
-      # 3️⃣ 初始化 Android SDK（第一次 build 会自动下载 NDK/SDK）
+      # 4️⃣ 构建 APK
       - name: Build APK with Buildozer
         run: |
           buildozer android debug
 
-      # 4️⃣ 列出 APK 文件（调试用）
+      # 5️⃣ 列出 APK 文件（调试用）
       - name: List APK files
         run: |
           echo "=== APK files found ==="
           find .buildozer/android/platform/build/dists/countapp/bin/ -type f -name "*.apk"
 
-      # 5️⃣ 上传 APK artifact
+      # 6️⃣ 上传 APK artifact
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
