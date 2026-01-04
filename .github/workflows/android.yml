@@ -29,16 +29,15 @@ jobs:
         distribution: temurin
         java-version: '17'
 
-    - name: Install Android command-line tools (old version)
+    - name: Install Android command-line tools (old version for Buildozer)
       run: |
         mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
         cd $ANDROID_SDK_ROOT/cmdline-tools
-        # 🔑 使用老版本 cmdline-tools，Buildozer 兼容
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
         unzip -q cmdline-tools.zip
         rm cmdline-tools.zip
 
-        # 修正结构：把解压出的 cmdline-tools 内容移到 latest/
+        # 修正目录结构：把解压出的 cmdline-tools 内容移动到 latest/
         mkdir -p latest
         mv cmdline-tools/* latest/
         chmod +x latest/bin/sdkmanager
@@ -46,7 +45,7 @@ jobs:
         # 永久 PATH
         echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
-    - name: Accept licenses and install SDK/NDK
+    - name: Accept Android SDK licenses and install tools
       run: |
         sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses || true
         sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
@@ -55,7 +54,7 @@ jobs:
           "build-tools;33.0.2" \
           "ndk;21.4.7075529"
 
-    - name: Upgrade pip and install Python deps
+    - name: Upgrade pip and install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
         pip install cython==0.29.36 virtualenv wheel
