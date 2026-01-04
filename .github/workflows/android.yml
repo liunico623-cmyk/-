@@ -53,18 +53,24 @@ jobs:
 
     - name: Install Android commandline tools
       run: |
-        mkdir -p "$ANDROID_SDK_ROOT"
-        cd "$ANDROID_SDK_ROOT"
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-        unzip -q cmdline-tools.zip
-        mkdir -p cmdline-tools/latest
-        mv cmdline-tools/* cmdline-tools/latest/ || true
+        mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+        cd "$ANDROID_SDK_ROOT/cmdline-tools"
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
+        unzip -q commandlinetools.zip
+        mv cmdline-tools cmdline-tools-temp
+        mkdir -p latest
+        mv cmdline-tools-temp/* latest/
+        rm commandlinetools.zip
 
-        # 预先写入 license 避免交互卡住
+        # 确保 sdkmanager 在 PATH
+        export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH"
+
+        # 写入 license 避免交互
         mkdir -p $ANDROID_SDK_ROOT/licenses
         echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_SDK_ROOT/licenses/android-sdk-license
         echo "84831b9409646a918e30573bab4c9c91346d8abd" >> $ANDROID_SDK_ROOT/licenses/android-sdk-license
 
+        # 安装平台和 NDK
         sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses || true
         sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
           "platform-tools" \
@@ -81,7 +87,7 @@ jobs:
     - name: Verify Buildozer
       run: |
         which buildozer
-        buildozer --version
+        python3 -m buildozer --version
 
     - name: Build APK
       run: |
