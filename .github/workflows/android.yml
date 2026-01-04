@@ -12,7 +12,7 @@ jobs:
     env:
       ANDROID_SDK_ROOT: $RUNNER_TEMP/android-sdk
       ANDROID_HOME: $RUNNER_TEMP/android-sdk
-      PATH: $RUNNER_TEMP/android-sdk/cmdline-tools/latest/bin:$RUNNER_TEMP/android-sdk/platform-tools:$PATH
+      PATH: $RUNNER_TEMP/android-sdk/cmdline-tools/latest/bin:$RUNNER_TEMP/android-sdk/platform-tools:$PATH:/usr/bin:/bin
 
     steps:
     - name: Checkout repository
@@ -32,11 +32,13 @@ jobs:
 
     - name: Install system dependencies
       run: |
-        sudo apt update
-        sudo apt install -y \
-          build-essential git zip unzip wget curl tar \
-          python3-pip python3-virtualenv python3-dev \
-          libffi-dev libssl-dev libsqlite3-dev libbz2-dev liblzma-dev zlib1g-dev
+        sudo apt-get update
+        sudo apt-get install -y build-essential git zip unzip wget curl tar python3-pip python3-virtualenv python3-dev libffi-dev libssl-dev libsqlite3-dev libbz2-dev liblzma-dev zlib1g-dev
+
+    - name: Verify tar
+      run: |
+        which tar
+        tar --version
 
     - name: Set up Java
       uses: actions/setup-java@v3
