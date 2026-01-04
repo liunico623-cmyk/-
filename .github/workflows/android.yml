@@ -5,7 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:  # 手动触发
 
 jobs:
   build:
@@ -16,11 +16,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ 安装 Docker（Buildozer action 用）
+      # 2️⃣ 安装 Docker（Buildozer action 依赖）
       - name: Setup Docker
-        run: sudo apt-get update && sudo apt-get install -y docker.io
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
 
-      # 3️⃣ Build APK
+      # 3️⃣ 构建 APK
       - name: Build with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
@@ -30,15 +33,16 @@ jobs:
           repository_root: .
           workdir: .
 
-      # 4️⃣ 查看 APK 路径（调试用，可选）
-      - name: List APK
+      # 4️⃣ 列出 APK（调试用，可选）
+      - name: List APK files
         run: |
           echo "=== APK files found ==="
           find .buildozer -name "*.apk"
 
-      # 5️⃣ 上传生成的 APK
+      # 5️⃣ 上传 APK artifact
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: countapp-apk
-          path: bin/*.apk
+          # 使用通配符匹配所有 ABI，确保上传成功
+          path: .buildozer/android/platform/build-*/build/*.apk
