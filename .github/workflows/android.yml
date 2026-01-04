@@ -5,7 +5,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,22 +16,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ ✅ Docker 已自带，无需安装
-      # 注释掉之前的 Docker 安装，避免依赖冲突
+      # 2️⃣ 用官方 Docker 镜像跑 Buildozer
+      - name: Build APK with Docker
+        run: |
+          docker run --rm \
+            -v $GITHUB_WORKSPACE:/app \
+            -w /app \
+            kivy/buildozer \
+            buildozer --allow-root android debug
 
-      # 3️⃣ 用 Buildozer Action 打包 APK
-      - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          # ⚡ 关键改动：加 --allow-root 避免交互提示 EOFError
-          command: buildozer --allow-root android debug
-          buildozer_version: stable
-          skip_chown: true  # 跳过 chown，避免 "invalid user" 错误
-
-      # 4️⃣ 上传生成的 APK
+      # 3️⃣ 上传生成的 APK
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: countapp-apk
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/android/debug/*.apk
