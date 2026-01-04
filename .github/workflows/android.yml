@@ -1,29 +1,37 @@
 name: Build Android APK
+
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch: # 允许手动触发
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ 拉取仓库代码
       - name: Checkout code
-        uses: actions/checkout@v4 # 使用最新版 checkout
+        uses: actions/checkout@v4
 
+      # 2️⃣ 安装 Docker（Buildozer action 用）
+      - name: Setup Docker
+        run: sudo apt-get update && sudo apt-get install -y docker.io
+
+      # 3️⃣ 用 Buildozer Action 打包 APK
       - name: Build with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1 # 官方推荐的 Action
+        uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
           command: buildozer android debug
           buildozer_version: stable
+          skip_chown: true  # <- 关键：跳过 chown，避免 "invalid user" 错误
 
+      # 4️⃣ 上传生成的 APK
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4 # 上传生成的 APK 文件
+        uses: actions/upload-artifact@v4
         with:
-          name: package
+          name: countapp-apk
           path: ${{ steps.buildozer.outputs.filename }}
-
