@@ -3,8 +3,8 @@ name: Build APK
 on:
   push:
     branches:
-      - main  # 触发分支，可改成你的主分支名字
-  workflow_dispatch:  # 支持手动触发
+      - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -19,11 +19,12 @@ jobs:
         sudo apt update
         sudo apt install -y python3-pip python3-virtualenv git zip unzip openjdk-17-jdk wget curl
         python3 -m pip install --upgrade pip
-        pip install cython==0.29.36 virtualenv wheel buildozer
+        pip install cython==0.29.36 virtualenv wheel buildozer==1.4.2
 
-    - name: Build APK with Buildozer
+    - name: Build APK
       run: |
-        buildozer -v android debug
+        buildozer android debug --verbose
+        ls -lh bin/
 
     - name: Upload APK
       uses: actions/upload-artifact@v3
