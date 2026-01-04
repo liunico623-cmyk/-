@@ -15,14 +15,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build APK (force no prompt)
+      - name: Build APK in Docker
         run: |
           docker run --rm \
-            --entrypoint /bin/bash \
             -v "$GITHUB_WORKSPACE:/app" \
             -w /app \
             kivy/buildozer \
             -lc "yes | buildozer --allow-root android debug"
+
+      - name: List generated APKs
+        run: |
+          echo "🔍 APK 文件列表："
+          find .buildozer/android/platform/build/dists/countapp/bin/ -type f -name "*.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
