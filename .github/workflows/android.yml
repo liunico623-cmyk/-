@@ -39,8 +39,8 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython
 
-      # 4️⃣ Install Android SDK & Build Tools
-      - name: Install Android SDK
+      # 4️⃣ 安装 Android SDK（锁定 Build-Tools 33.0.2）
+      - name: Install Android SDK & Build Tools
         run: |
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
@@ -49,31 +49,33 @@ jobs:
 
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
 
+          # 安装平台和 build-tools 33.0.2
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
             "platform-tools" \
             "platforms;android-33" \
             "build-tools;33.0.2"
 
+          # 接受所有 license
           yes | sdkmanager --licenses
 
-      # 5️⃣ Remove incompatible build-tools（双保险）
+      # 5️⃣ 双保险：删除 Buildozer 尝试拉的 36.x
       - name: Remove incompatible build-tools
         run: |
           rm -rf $ANDROID_SDK_ROOT/build-tools/36.*
 
-      # 6️⃣ Build APK with Buildozer
-      - name: Build APK
+      # 6️⃣ Buildozer 编译 APK
+      - name: Build APK with Buildozer
         run: |
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
           buildozer -v android debug
 
-      # 7️⃣ Prepare APK
+      # 7️⃣ 准备 APK 文件
       - name: Prepare APK
         run: |
           cp .buildozer/android/platform/build/dists/*/bin/*.apk countapp.apk
           ls -lah countapp.apk
 
-      # 8️⃣ Create GitHub Release
+      # 8️⃣ 创建 GitHub Release
       - name: Create GitHub Release
         id: create_release
         uses: actions/create-release@v1
@@ -85,7 +87,7 @@ jobs:
           draft: true
           prerelease: false
 
-      # 9️⃣ Upload APK to Release
+      # 9️⃣ 上传 APK 到 Release
       - name: Upload APK
         uses: actions/upload-release-asset@v1
         env:
