@@ -12,18 +12,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ 拉取仓库代码
+      # 1️⃣ 拉取代码
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ 用官方 Docker 镜像跑 Buildozer
+      # 2️⃣ 构建 APK（用非 root 用户运行 Docker）
       - name: Build APK with Docker
         run: |
           docker run --rm \
             -v $GITHUB_WORKSPACE:/app \
             -w /app \
+            -e USER_ID=$(id -u) \
+            -e GROUP_ID=$(id -g) \
             kivy/buildozer \
-            buildozer --allow-root android debug
+            buildozer android debug
 
       # 3️⃣ 上传生成的 APK
       - name: Upload APK artifact
