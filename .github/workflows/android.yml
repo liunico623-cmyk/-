@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4  # 升级到v4
+      uses: actions/checkout@v3
 
     - name: Cache Python packages
       uses: actions/cache@v4
@@ -25,7 +25,7 @@ jobs:
         key: ${{ runner.os }}-pip-${{ hashFiles('**/buildozer.spec') }}
 
     - name: Cache Android SDK / NDK
-      uses: actions/cache@v4  # 升级到v4
+      uses: actions/cache@v3
       with:
         path: $RUNNER_TEMP/android-sdk
         key: ${{ runner.os }}-android-sdk
@@ -39,11 +39,10 @@ jobs:
           libffi-dev libssl-dev libsqlite3-dev libbz2-dev liblzma-dev zlib1g-dev
 
     - name: Set up Java
-      uses: actions/setup-java@v4  # 升级到v4
+      uses: actions/setup-java@v3
       with:
         distribution: temurin
         java-version: '17'
-        cache: gradle  # v4新增缓存gradle，加速构建
 
     - name: Install Android commandline tools
       run: |
@@ -64,12 +63,13 @@ jobs:
           "platform-tools" \
           "platforms;android-33" \
           "build-tools;33.0.2" \
-          "ndk;25.1.8937393"
+          "ndk;21.4.7075529"
 
     - name: Upgrade pip and install Python deps
       run: |
         python3 -m pip install --upgrade pip
-        pip install cython==0.29.36 virtualenv wheel buildozer==1.4.2
+        pip install cython==0.29.36 virtualenv wheel
+        pip install --upgrade buildozer
 
     - name: Build APK
       run: |
@@ -78,8 +78,7 @@ jobs:
       timeout-minutes: 120
 
     - name: Upload APK
-      uses: actions/upload-artifact@v4  # 升级到v4（核心修正）
+      uses: actions/upload-artifact@v4
       with:
         name: countapp-apk
         path: bin/**/*.apk
-        if-no-files-found: warn  # 可选，无APK时仅警告不直接失败
