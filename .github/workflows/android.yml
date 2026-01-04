@@ -18,32 +18,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Cache Python packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/buildozer.spec') }}
-
-    - name: Cache Android SDK / NDK
-      uses: actions/cache@v3
-      with:
-        path: $RUNNER_TEMP/android-sdk
-        key: ${{ runner.os }}-android-sdk
-
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential git zip unzip wget curl tar python3-pip python3-virtualenv python3-dev libffi-dev libssl-dev libsqlite3-dev libbz2-dev liblzma-dev zlib1g-dev
-
-    - name: Verify system tools
-      run: |
-        echo "Checking system tools..."
-        tar --version
-        unzip -v
-        wget --version
-        java -version
-        python3 --version
-        which buildozer || echo "Buildozer not installed yet"
 
     - name: Set up Java
       uses: actions/setup-java@v3
@@ -51,26 +29,25 @@ jobs:
         distribution: temurin
         java-version: '17'
 
-    - name: Install Android commandline tools
+    - name: Install Android command-line tools
       run: |
-        mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
-        cd "$ANDROID_SDK_ROOT/cmdline-tools"
+        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+        cd $ANDROID_SDK_ROOT/cmdline-tools
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
         unzip -q commandlinetools.zip
-        mv cmdline-tools cmdline-tools-temp
-        mkdir -p latest
-        mv cmdline-tools-temp/* latest/
         rm commandlinetools.zip
 
-        # 确保 sdkmanager 在 PATH
-        export PATH="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH"
+        # cmdline-tools 目录结构调整
+        mv cmdline-tools latest
 
-        # 写入 license 避免交互
-        mkdir -p $ANDROID_SDK_ROOT/licenses
-        echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" > $ANDROID_SDK_ROOT/licenses/android-sdk-license
-        echo "84831b9409646a918e30573bab4c9c91346d8abd" >> $ANDROID_SDK_ROOT/licenses/android-sdk-license
+        # 确保 sdkmanager 可用
+        chmod +x latest/bin/sdkmanager
 
-        # 安装平台和 NDK
+        # 永久 PATH 生效
+        echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
+    - name: Accept licenses and install SDK/NDK
+      run: |
         sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses || true
         sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
           "platform-tools" \
@@ -83,11 +60,6 @@ jobs:
         python3 -m pip install --upgrade pip
         pip install cython==0.29.36 virtualenv wheel
         pip install --upgrade buildozer
-
-    - name: Verify Buildozer
-      run: |
-        which buildozer
-        python3 -m buildozer --version
 
     - name: Build APK
       run: |
