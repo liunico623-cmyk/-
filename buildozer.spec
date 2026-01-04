@@ -27,6 +27,9 @@ android.api = 33
 android.minapi = 21
 android.archs = arm64-v8a,armeabi-v7a
 
+# 锁定 build-tools 版本（防止 Buildozer 自动拉 36.x）
+android.build_tools_version = 33.0.2
+
 # 允许备份
 android.allow_backup = True
 
