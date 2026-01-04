@@ -31,17 +31,13 @@ jobs:
 
     - name: Install Android command-line tools
       run: |
-        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
-        cd $ANDROID_SDK_ROOT/cmdline-tools
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
-        unzip -q commandlinetools.zip
-        rm commandlinetools.zip
-        mv cmdline-tools latest
-
-        # 确保 sdkmanager 可执行
-        chmod +x latest/bin/sdkmanager
-
-        # 永久 PATH 生效
+        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
+        cd $ANDROID_SDK_ROOT/cmdline-tools/latest
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+        unzip -q cmdline-tools.zip
+        rm cmdline-tools.zip
+        # 保持官方结构，不要再 mv，bin 和 lib 在同一级
+        chmod +x bin/sdkmanager
         echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
     - name: Accept licenses and install SDK/NDK
