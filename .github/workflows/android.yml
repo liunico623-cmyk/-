@@ -1,4 +1,4 @@
-name: Build Android APK (No Docker, Auto SDK/NDK)
+name: Build Android APK (With SDK/NDK Setup)
 
 on:  
   push:  
@@ -11,58 +11,57 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      ANDROID_SDK_ROOT: ${{ github.workspace }}/.buildozer/android/platform/android-sdk
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+      PATH: ${{ github.workspace }}/android-sdk/cmdline-tools/latest/bin:$PATH
 
     steps:
-      # 1️⃣ 拉取仓库代码
+      # 1️⃣ Checkout
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ 设置 Python
-      - name: Set up Python
+      # 2️⃣ Setup Python
+      - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      # 3️⃣ 安装 Buildozer 所需系统依赖
+      # 3️⃣ Install system dependencies
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            python3-pip \
-            git \
-            zip \
-            unzip \
-            openjdk-17-jdk \
-            zlib1g-dev \
-            libncurses-dev \
-            libffi-dev \
-            libssl-dev \
-            autoconf \
-            automake \
-            libtool \
-            pkg-config \
-            build-essential \
-            ccache \
-            libsqlite3-dev \
-            python3-setuptools \
-            libjpeg-dev \
-            libpng-dev
+            python3-pip git zip unzip openjdk-17-jdk \
+            zlib1g-dev libncurses-dev libffi-dev libssl-dev \
+            autoconf automake libtool pkg-config build-essential \
+            ccache libsqlite3-dev python3-setuptools \
+            libjpeg-dev libpng-dev
           pip install --upgrade pip
           pip install buildozer cython
 
-      # 4️⃣ 构建 APK（Buildozer 会自动下载 SDK/NDK + Build Tools）
+      # 4️⃣ Install Android SDK & Build Tools
+      - name: Install Android SDK & Build Tools
+        run: |
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+          cd $ANDROID_SDK_ROOT
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          unzip cmdline-tools.zip
+          mkdir -p cmdline-tools/latest
+          mv cmdline-tools/* cmdline-tools/latest/
+          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          sdkmanager --licenses
+
+      # 5️⃣ Build APK
       - name: Build APK with Buildozer
         run: |
           buildozer android debug
 
-      # 5️⃣ 列出 APK 文件（调试用）
+      # 6️⃣ List APK
       - name: List APK files
         run: |
           echo "=== APK files found ==="
           find .buildozer/android/platform/build/dists/countapp/bin/ -type f -name "*.apk"
 
-      # 6️⃣ 上传 APK artifact
+      # 7️⃣ Upload artifact
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
