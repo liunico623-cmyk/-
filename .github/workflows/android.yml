@@ -16,16 +16,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2️⃣ 安装 Docker（Buildozer action 用）
-      - name: Setup Docker
-        run: sudo apt-get update && sudo apt-get install -y docker.io
+      # 2️⃣ ✅ Docker 已自带，无需安装
+      # 注释掉之前的 Docker 安装，避免依赖冲突
 
       # 3️⃣ 用 Buildozer Action 打包 APK
       - name: Build with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1
         id: buildozer
         with:
-          # ⚡关键改动：加上 --allow-root 避免 EOFError
+          # ⚡ 关键改动：加 --allow-root 避免交互提示 EOFError
           command: buildozer --allow-root android debug
           buildozer_version: stable
           skip_chown: true  # 跳过 chown，避免 "invalid user" 错误
