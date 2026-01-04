@@ -37,17 +37,17 @@ jobs:
         unzip -q cmdline-tools.zip
         rm cmdline-tools.zip
 
-        # 🔑 修正目录结构：bin 和 lib 必须在 latest 里
+        # 修正目录结构：bin 和 lib 在 latest 下
         mkdir -p latest
         mv cmdline-tools/* latest/
         chmod +x latest/bin/sdkmanager
 
-        # 永久 PATH
+        # 添加 sdkmanager 到 PATH
         echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
     - name: Accept Android SDK licenses and install tools
       run: |
-        sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses || true
+        sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses
         sdkmanager --sdk_root="$ANDROID_SDK_ROOT" \
           "platform-tools" \
           "platforms;android-33" \
