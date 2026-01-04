@@ -1,4 +1,4 @@
-name: Build Android APK (No Docker, Ubuntu 24.04)
+name: Build Android APK (No Docker, Auto SDK/NDK)
 
 on:  
   push:  
@@ -10,6 +10,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/.buildozer/android/platform/android-sdk
 
     steps:
       # 1️⃣ 拉取仓库代码
@@ -49,7 +51,7 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython
 
-      # 4️⃣ 构建 APK
+      # 4️⃣ 构建 APK（Buildozer 会自动下载 SDK/NDK + Build Tools）
       - name: Build APK with Buildozer
         run: |
           buildozer android debug
