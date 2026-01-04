@@ -26,14 +26,8 @@ jobs:
       - name: List generated APKs
         run: |
           echo "🔍 APK 文件列表："
-          find .buildozer/android/platform/build/dists/countapp/bin/ -type f -name "*.apk"
-
-      - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: countapp-apk
-          path: .buildozer/android/platform/build/dists/countapp/bin/*.apk
-
+          find .buildozer/android/platform/build/dists/countapp/bin/ -type f -name "*.apk
+          
       - name: List generated APKs
         run: |
           echo "🔍 APK 文件列表："
