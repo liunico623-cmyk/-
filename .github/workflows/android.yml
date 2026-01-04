@@ -1,4 +1,4 @@
-name: Build Android APK (With SDK/NDK Setup)
+name: Build Android APK (Stable)
 
 on:  
   push:  
@@ -12,7 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
-      PATH: ${{ github.workspace }}/android-sdk/cmdline-tools/latest/bin:$PATH
 
     steps:
       # 1️⃣ Checkout
@@ -47,15 +46,17 @@ jobs:
           unzip cmdline-tools.zip
           mkdir -p cmdline-tools/latest
           mv cmdline-tools/* cmdline-tools/latest/
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2"
           sdkmanager --licenses
 
       # 5️⃣ Build APK
       - name: Build APK with Buildozer
         run: |
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
           buildozer android debug
 
-      # 6️⃣ List APK
+      # 6️⃣ List APK files
       - name: List APK files
         run: |
           echo "=== APK files found ==="
