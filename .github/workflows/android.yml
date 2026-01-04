@@ -3,8 +3,6 @@ name: Build Android APK & Release
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -28,8 +26,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            python3-pip git zip unzip openjdk-17-jdk \
+          sudo apt-get install -y python3-pip git zip unzip openjdk-17-jdk \
             zlib1g-dev libncurses-dev libffi-dev libssl-dev \
             autoconf automake libtool pkg-config build-essential \
             ccache libsqlite3-dev python3-setuptools \
@@ -45,7 +42,7 @@ jobs:
           unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
           mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
-          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          echo "y" | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;36.1.0"
           yes | sdkmanager --licenses
 
       # 5️⃣ Build APK
@@ -56,9 +53,12 @@ jobs:
 
       # 6️⃣ List APK files
       - name: List APK files
+        id: list_apk
         run: |
-          echo "=== APK files found ==="
-          find .buildozer/android/platform/build/dists/ -type f -name "*.apk"
+          APK_PATH=$(find .buildozer/android/platform/build/dists/*/bin -type f -name "*.apk" | head -n 1)
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "=== APK file found ==="
+          echo $APK_PATH
 
       # 7️⃣ Create GitHub Release
       - name: Create GitHub Release
@@ -74,11 +74,21 @@ jobs:
 
       # 8️⃣ Upload APK to Release
       - name: Upload APK to Release
+        id: upload_apk
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: .buildozer/android/platform/build/dists/*/bin/*.apk
+          asset_path: ${{ steps.list_apk.outputs.apk_path }}
           asset_name: MyApp.apk
           asset_content_type: application/vnd.android.package-archive
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 9️⃣ Output direct download link
+      - name: Generate APK Download Link
+        run: |
+          RELEASE_ID=$(gh release view v${{ github.run_number }} --json id -q ".id")
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/MyApp.apk"
+          echo "apk_download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
