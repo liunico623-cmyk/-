@@ -34,7 +34,7 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython
 
-      # 4️⃣ Install Android SDK & Build Tools
+      # 4️⃣ Install Android SDK & Build Tools with auto-license
       - name: Install Android SDK & Build Tools
         run: |
           mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
@@ -42,8 +42,10 @@ jobs:
           unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
           mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
-          echo "y" | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;36.1.0"
-          yes | sdkmanager --licenses
+          
+          # 安装 SDK 平台和 Build-Tools，并自动接受许可
+          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
+          sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;36.1.0"
 
       # 5️⃣ Build APK
       - name: Build APK with Buildozer
@@ -57,8 +59,7 @@ jobs:
         run: |
           APK_PATH=$(find .buildozer/android/platform/build/dists/*/bin -type f -name "*.apk" | head -n 1)
           echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
-          echo "=== APK file found ==="
-          echo $APK_PATH
+          echo "APK file found: $APK_PATH"
 
       # 7️⃣ Create GitHub Release
       - name: Create GitHub Release
@@ -74,7 +75,6 @@ jobs:
 
       # 8️⃣ Upload APK to Release
       - name: Upload APK to Release
-        id: upload_apk
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -87,8 +87,5 @@ jobs:
       # 9️⃣ Output direct download link
       - name: Generate APK Download Link
         run: |
-          RELEASE_ID=$(gh release view v${{ github.run_number }} --json id -q ".id")
           DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${{ github.run_number }}/MyApp.apk"
           echo "apk_download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
