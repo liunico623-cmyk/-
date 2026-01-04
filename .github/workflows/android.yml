@@ -21,9 +21,9 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential git zip unzip wget curl tar python3-pip python3-virtualenv python3-dev libffi-dev libssl-dev libsqlite3-dev libbz2-dev liblzma-dev zlib1g-dev
+        sudo apt-get install -y build-essential git zip unzip wget curl tar python3-pip python3-virtualenv python3-dev libffi-dev libssl-dev libsqlite3-dev libbz2-dev liblzma-dev zlib1g-dev openjdk-17-jdk
 
-    - name: Set up Java
+    - name: Set up Java (Temurin)
       uses: actions/setup-java@v3
       with:
         distribution: temurin
@@ -36,12 +36,7 @@ jobs:
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O commandlinetools.zip
         unzip -q commandlinetools.zip
         rm commandlinetools.zip
-
-        # cmdline-tools 目录结构调整
         mv cmdline-tools latest
-
-        # 确保 sdkmanager 可用
-        chmod +x latest/bin/sdkmanager
 
         # 永久 PATH 生效
         echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
@@ -60,6 +55,11 @@ jobs:
         python3 -m pip install --upgrade pip
         pip install cython==0.29.36 virtualenv wheel
         pip install --upgrade buildozer
+
+    - name: Verify Buildozer
+      run: |
+        which buildozer
+        python3 -m buildozer --version
 
     - name: Build APK
       run: |
