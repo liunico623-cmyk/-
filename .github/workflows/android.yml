@@ -5,27 +5,41 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ 拉取仓库代码
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build APK (force no prompt)
-        run: |
-          docker run --rm \
-            --entrypoint /bin/bash \
-            -v "$GITHUB_WORKSPACE:/app" \
-            -w /app \
-            kivy/buildozer \
-            -lc "yes | buildozer --allow-root android debug"
+      # 2️⃣ 安装 Docker（Buildozer action 用）
+      - name: Setup Docker
+        run: sudo apt-get update && sudo apt-get install -y docker.io
 
-      - name: Upload APK
+      # 3️⃣ Build APK
+      - name: Build with Buildozer
+        uses: ArtemSBulgakov/buildozer-action@v1
+        id: buildozer
+        with:
+          command: buildozer --allow-root android debug
+          buildozer_version: stable
+          repository_root: .
+          workdir: .
+
+      # 4️⃣ 查看 APK 路径（调试用，可选）
+      - name: List APK
+        run: |
+          echo "=== APK files found ==="
+          find .buildozer -name "*.apk"
+
+      # 5️⃣ 上传生成的 APK
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: countapp-apk
-          path: bin/android/debug/*.apk
+          # ✅ 通配符匹配 debug APK
+          path: .buildozer/android/platform/build/dists/**/build/outputs/apk/debug/*.apk
