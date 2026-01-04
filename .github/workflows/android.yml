@@ -1,8 +1,9 @@
 name: Build Android APK & Release
-
-on:  
-  push: branches: [ main ]
-  pull_request: branches: [ main ]
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -10,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
-      # 全局PATH，所有step都能用
+      # 全局PATH，所有步骤共用
       PATH: ${{ github.workspace }}/android-sdk/cmdline-tools/latest/bin:${{ env.PATH }}
 
     steps:
@@ -21,17 +22,9 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-          cache: 'pip' # 缓存pip包，提速
+          cache: 'pip'
 
-      # 缓存Android SDK，避免每次下载
-      - name: Cache Android SDK
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.ANDROID_SDK_ROOT }}
-          key: ${{ runner.os }}-android-sdk-${{ hashFiles('**/buildozer.spec') }}
-          restore-keys: ${{ runner.os }}-android-sdk-
-
-      - name: Install system & Python dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y \
             git zip unzip openjdk-17-jdk zlib1g-dev libncurses-dev \
@@ -52,20 +45,18 @@ jobs:
         run: buildozer android debug
         timeout-minutes: 120
 
-      - name: List APK files (debug)
-        run: find . -name "*.apk" -type f | tee apk_paths.txt
+      - name: List all APK files (debug)
+        run: find . -name "*.apk" -type f
 
-      # 新版发布工具，一步创建Release+上传APK
       - name: Create Release & Upload APK
-        if: github.event_name != 'pull_request' # PR不发版
+        if: github.event_name != 'pull_request'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
           name: APK Release v${{ github.run_number }}
           draft: true
           files: |
-            .buildozer/android/platform/build/dists/countapp/bin/*.apk
-            bin/*.apk # 兼容常规路径
+            .buildozer/android/platform/build/dists/**/*.apk
+            bin/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
