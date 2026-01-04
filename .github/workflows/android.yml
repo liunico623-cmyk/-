@@ -29,19 +29,18 @@ jobs:
         distribution: temurin
         java-version: '17'
 
-    - name: Install Android command-line tools
+    - name: Install Android command-line tools (old version)
       run: |
         mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
         cd $ANDROID_SDK_ROOT/cmdline-tools
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+        # 🔑 使用老版本 cmdline-tools，Buildozer 兼容
+        wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
         unzip -q cmdline-tools.zip
         rm cmdline-tools.zip
 
-        # 🔑 修正结构：把解压出的 cmdline-tools 内部内容移动到 latest/
+        # 修正结构：把解压出的 cmdline-tools 内容移到 latest/
         mkdir -p latest
         mv cmdline-tools/* latest/
-
-        # bin/sdkmanager 可执行
         chmod +x latest/bin/sdkmanager
 
         # 永久 PATH
