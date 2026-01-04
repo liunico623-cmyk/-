@@ -41,5 +41,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: countapp-apk
-          # ✅ 通配符匹配 debug APK
-          path: .buildozer/android/platform/build/dists/**/build/outputs/apk/debug/*.apk
+          path: bin/*.apk
