@@ -33,11 +33,12 @@ jobs:
       run: |
         mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
         cd $ANDROID_SDK_ROOT/cmdline-tools
+        # 使用老版本 cmdline-tools
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
         unzip -q cmdline-tools.zip
         rm cmdline-tools.zip
 
-        # 修正目录结构：把解压出的 cmdline-tools 内容移动到 latest/
+        # 修正目录结构：bin 和 lib 在 latest/ 里
         mkdir -p latest
         mv cmdline-tools/* latest/
         chmod +x latest/bin/sdkmanager
