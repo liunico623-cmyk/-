@@ -37,21 +37,30 @@ jobs:
           pip install --upgrade pip
           pip install buildozer cython
 
-      # 4️⃣ Install Android SDK & Build Tools (Fixed cmdline-tools)
-      - name: Install Android SDK & Build Tools
-        run: |
-          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools/latest
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/bin:$PATH
-          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;36.1.0"
-          sdkmanager --licenses
+    # 4️⃣ Install Android SDK & Build Tools (Modified)
+    - name: Install Android SDK & Build Tools
+      run: |
+        # 创建结构
+        mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
+        
+        # 下载并解压 cmdline tools
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+        unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools/latest
+        
+        # 将 cmdline-tools/bin 加入 PATH，这样 sdkmanager 才能被找到
+        echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/bin" >> $GITHUB_PATH
+        
+        # 安装必要的组件 (注意：都加上了 --sdk_root)
+        yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;34.0.0" 
+        
+        # 同意许可证 (注意：必须加上 yes | 和 --sdk_root)
+        yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses
 
-      # 5️⃣ Build APK
-      - name: Build APK with Buildozer
-        run: |
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/bin:$PATH
-          buildozer android debug
+    # 5️⃣ Build APK (Modified)
+    - name: Build APK with Buildozer
+      run: |
+        # 确保 buildozer 知道 SDK 在哪里
+        buildozer android debug
 
       # 6️⃣ List APK files
       - name: List APK files
