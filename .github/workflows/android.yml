@@ -37,13 +37,14 @@ jobs:
         unzip -q cmdline-tools.zip
         rm cmdline-tools.zip
 
-        # 修正结构：把解压出的 cmdline-tools 移到 latest
-        mv cmdline-tools latest
+        # 🔑 修正结构：把解压出的 cmdline-tools 内部内容移动到 latest/
+        mkdir -p latest
+        mv cmdline-tools/* latest/
 
         # bin/sdkmanager 可执行
         chmod +x latest/bin/sdkmanager
 
-        # 永久添加到 PATH
+        # 永久 PATH
         echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
     - name: Accept licenses and install SDK/NDK
