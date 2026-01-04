@@ -15,41 +15,47 @@ jobs:
       PATH: $RUNNER_TEMP/android-sdk/cmdline-tools/latest/bin:$RUNNER_TEMP/android-sdk/platform-tools:$PATH
 
     steps:
+    # 1️⃣ 拉取仓库
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    # 2️⃣ 安装基础系统依赖（tar/wget/unzip/git/build-essential 等）
     - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y \
+          tar wget unzip curl git build-essential \
           python3-pip python3-virtualenv python3-dev \
-          build-essential git zip unzip wget curl tar \
-          libffi-dev libssl-dev libsqlite3-dev libbz2-dev liblzma-dev zlib1g-dev openjdk-17-jdk
+          libffi-dev libssl-dev libsqlite3-dev libbz2-dev liblzma-dev zlib1g-dev \
+          openjdk-17-jdk
 
+    # 3️⃣ 设置 Java 17
     - name: Set up Java 17
       uses: actions/setup-java@v3
       with:
         distribution: temurin
         java-version: '17'
 
-    - name: Install Android SDK cmdline-tools (Buildozer compatible)
+    # 4️⃣ 安装 Android SDK cmdline-tools（Buildozer 兼容）
+    - name: Install Android SDK cmdline-tools
       run: |
         mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
         cd $ANDROID_SDK_ROOT/cmdline-tools
 
-        # 下载兼容 Buildozer 的 cmdline-tools
+        # 下载稳定版本 cmdline-tools（8512546，Buildozer 推荐）
         wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
         unzip -q cmdline-tools.zip
         rm cmdline-tools.zip
 
-        # 修正目录结构
+        # 修正目录结构，保持 bin 和 lib 在 latest/
         mkdir -p latest
-        mv cmdline-tools/* latest/
+        mv cmdline-tools/* latest/ || true
         chmod +x latest/bin/sdkmanager
 
-        # 确认 PATH
+        # 添加到 PATH
         echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
+    # 5️⃣ 接受许可并安装 SDK / NDK / Build-tools
     - name: Accept licenses and install required SDKs
       run: |
         sdkmanager --sdk_root="$ANDROID_SDK_ROOT" --licenses
@@ -59,16 +65,19 @@ jobs:
           "build-tools;33.0.2" \
           "ndk;21.4.7075529"
 
-    - name: Install Python dependencies for Buildozer
+    # 6️⃣ 安装 Python 依赖（Buildozer + Cython）
+    - name: Install Python dependencies
       run: |
         python3 -m pip install --upgrade pip
         pip install cython==0.29.36 wheel virtualenv buildozer==1.4.2
 
+    # 7️⃣ 用 Buildozer 构建 APK
     - name: Build APK with Buildozer
       run: |
         buildozer android debug
         ls -lh bin/
 
+    # 8️⃣ 上传 APK artifact
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
