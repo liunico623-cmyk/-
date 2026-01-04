@@ -40,24 +40,25 @@ jobs:
       # 4️⃣ Install Android SDK & Build Tools
       - name: Install Android SDK & Build Tools
         run: |
-          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools/latest
+          mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-          unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools/latest
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/bin:$PATH
+          unzip cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
+          mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
           yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "platform-tools" "platforms;android-33" "build-tools;33.0.2"
           yes | sdkmanager --licenses
 
       # 5️⃣ Build APK
       - name: Build APK with Buildozer
         run: |
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/cmdline-tools/bin:$PATH
+          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
           buildozer android debug
 
       # 6️⃣ List APK files
       - name: List APK files
         run: |
           echo "=== APK files found ==="
-          find .buildozer/android/platform/build/dists/countapp/bin/ -type f -name "*.apk"
+          find .buildozer/android/platform/build/dists/ -type f -name "*.apk"
 
       # 7️⃣ Create GitHub Release
       - name: Create GitHub Release
@@ -73,20 +74,11 @@ jobs:
 
       # 8️⃣ Upload APK to Release
       - name: Upload APK to Release
-        id: upload_release
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: .buildozer/android/platform/build/dists/countapp/bin/*.apk
-          asset_name: countapp.apk
+          asset_path: .buildozer/android/platform/build/dists/*/bin/*.apk
+          asset_name: MyApp.apk
           asset_content_type: application/vnd.android.package-archive
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # 9️⃣ Update Release Description with APK Download Link
-      - name: Update Release Description with APK link
-        run: |
-          ASSET_URL=$(gh release view v${{ github.run_number }} --repo ${{ github.repository }} --json assets -q '.assets[0].browser_download_url')
-          gh release edit v${{ github.run_number }} --repo ${{ github.repository }} --notes "APK is ready! [Download APK here]($ASSET_URL)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
