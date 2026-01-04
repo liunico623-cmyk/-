@@ -12,7 +12,7 @@ jobs:
     env:
       ANDROID_SDK_ROOT: $RUNNER_TEMP/android-sdk
       ANDROID_HOME: $RUNNER_TEMP/android-sdk
-      PATH: $RUNNER_TEMP/android-sdk/cmdline-tools/latest/bin:$RUNNER_TEMP/android-sdk/platform-tools:$PATH
+      PATH: $RUNNER_TEMP/android-sdk/cmdline-tools/latest/bin:$RUNNER_TEMP/android-sdk/platform-tools:$PATH:/usr/bin:/bin
 
     steps:
     - name: Checkout repository
@@ -21,11 +21,9 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y \
-          build-essential git zip unzip wget curl tar python3-pip python3-virtualenv python3-dev \
-          libffi-dev libssl-dev libsqlite3-dev libbz2-dev liblzma-dev zlib1g-dev openjdk-17-jdk
+        sudo apt-get install -y build-essential git zip unzip wget curl tar python3-pip python3-virtualenv python3-dev libffi-dev libssl-dev libsqlite3-dev libbz2-dev liblzma-dev zlib1g-dev openjdk-17-jdk
 
-    - name: Set up Java (Temurin)
+    - name: Set up Java
       uses: actions/setup-java@v3
       with:
         distribution: temurin
@@ -39,6 +37,11 @@ jobs:
         unzip -q commandlinetools.zip
         rm commandlinetools.zip
         mv cmdline-tools latest
+
+        # 确保 sdkmanager 可执行
+        chmod +x latest/bin/sdkmanager
+
+        # 永久 PATH 生效
         echo "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
     - name: Accept licenses and install SDK/NDK
@@ -50,7 +53,7 @@ jobs:
           "build-tools;33.0.2" \
           "ndk;21.4.7075529"
 
-    - name: Install Python dependencies
+    - name: Upgrade pip and install Python deps
       run: |
         python3 -m pip install --upgrade pip
         pip install cython==0.29.36 virtualenv wheel
